@@ -2,12 +2,15 @@ package main
 
 import (
 	"api/src/core"
+	"api/src/order/infraestructure/adapters"
+	"api/src/order/infraestructure/routes"
 	productadapter "api/src/product/infrastructure/adapters"
 	productroutes "api/src/product/infrastructure/routes"
 	useradapter "api/src/user/infrastructure/adapters"
 	userroutes "api/src/user/infrastructure/routes"
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -18,11 +21,13 @@ func main() {
 
 	productRepo := productadapter.NewMySQLRepository(db)
 	userRepo := useradapter.NewMySQLRepository(db)
+	orderRepo := adapters.NewMySQLRepository(db)
 
 	router := gin.Default()
 
 	productroutes.SetupProductRoutes(router, productRepo)
 	userroutes.SetupUserRoutes(router, userRepo)
+	routes.SetupOrderRoutes(router, orderRepo)
 
 	log.Println("Iniciando el Servidor en el puerto 8080...")
 
