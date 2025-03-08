@@ -25,8 +25,8 @@ func Execute(idProduct int32, quantity int32, totalPrice float64, status string)
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"rabbit", // name
-		"fanout", // type
+		"order",  // name
+		"direct", // type
 		true,     // durable
 		false,    // auto-deleted
 		false,    // internal
@@ -51,10 +51,10 @@ func Execute(idProduct int32, quantity int32, totalPrice float64, status string)
 	failOnError(err, "Failed to marshal JSON")
 
 	err = ch.PublishWithContext(ctx,
-		"rabbit", // exchange
-		"",       // routing key
-		false,    // mandatory
-		false,    // immediate
+		"order", // exchange
+		"123",   // routing key
+		false,   // mandatory
+		false,   // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,

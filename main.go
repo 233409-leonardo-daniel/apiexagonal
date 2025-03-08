@@ -10,6 +10,7 @@ import (
 	userroutes "api/src/user/infrastructure/routes"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +25,15 @@ func main() {
 	orderRepo := adapters.NewMySQLRepository(db)
 
 	router := gin.Default()
+
+	// Configuración de CORS
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173"}, // Cambia esto según tu frontend
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	productroutes.SetupProductRoutes(router, productRepo)
 	userroutes.SetupUserRoutes(router, userRepo)
