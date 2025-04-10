@@ -1,14 +1,15 @@
 package controllers
 
 import (
-	"api/src/user/domain/repositories"
-	"github.com/gin-gonic/gin"
+	"api/src/user/application/use_cases"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
-func GetAllPrductsController(repo repositories.IUser) gin.HandlerFunc {
+func GetAllUsersController(useCase *usecases.ViewUser) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		users, err := repo.GetAll()
+		users, err := useCase.Execute()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

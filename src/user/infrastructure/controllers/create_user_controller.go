@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"api/src/user/application/use_cases"
-	"github.com/gin-gonic/gin"
+	usecases "api/src/user/application/use_cases"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type CreateUserController struct {
@@ -19,6 +20,7 @@ func (cp *CreateUserController) Run(c *gin.Context) {
 		Name     string `json:"name"`
 		LastName string `json:"lastname"`
 		Age      int    `json:"age"`
+		Password string `json:"password"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -26,7 +28,7 @@ func (cp *CreateUserController) Run(c *gin.Context) {
 		return
 	}
 
-	err := cp.useCase.Execute(input.Name, input.LastName, input.Age)
+	err := cp.useCase.Execute(input.Name, input.LastName, input.Age, input.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

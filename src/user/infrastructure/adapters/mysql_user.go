@@ -15,8 +15,8 @@ func NewMySQLRepository(db *gorm.DB) repositories.IUser {
 	return &MySQLRepository{db: db}
 }
 
-func (repo *MySQLRepository) Save(name string, lastname string, age int) error {
-	user := entities.NewUser(name, lastname, age)
+func (repo *MySQLRepository) Save(name string, lastname string, age int, password string) error {
+	user := entities.NewUser(name, lastname, age, password)
 	result := repo.db.Create(user)
 	return result.Error
 }
