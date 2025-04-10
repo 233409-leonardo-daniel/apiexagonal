@@ -3,25 +3,28 @@ package adapters
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
+type RabbitProducer struct {
+	conn *amqp.Connection
 }
 
-func Execute(idProduct int32, quantity int32, totalPrice float64, status string) {
-	conn, err := amqp.Dial("amqp://leo:1234@34.235.202.211:5672/")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
+func NewRabbitProducer(url string) (*RabbitProducer, error) {
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return nil, err
+	}
+	return &RabbitProducer{conn: conn}, nil
+}
 
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+func (p *RabbitProducer) Publish(idProduct int32, quantity int32, totalPrice float64, status string) error {
+	ch, err := p.conn.Channel()
+	if err != nil {
+		return err
+	}
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
@@ -33,12 +36,13 @@ func Execute(idProduct int32, quantity int32, totalPrice float64, status string)
 		false,    // no-wait
 		nil,      // arguments
 	)
-	failOnError(err, "Failed to declare an exchange")
+	if err != nil {
+		return err
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Crear un mapa con los datos
 	data := map[string]interface{}{
 		"idProduct":  idProduct,
 		"quantity":   quantity,
@@ -46,9 +50,10 @@ func Execute(idProduct int32, quantity int32, totalPrice float64, status string)
 		"status":     status,
 	}
 
-	// Convertir los datos a JSON
 	body, err := json.Marshal(data)
-	failOnError(err, "Failed to marshal JSON")
+	if err != nil {
+		return err
+	}
 
 	err = ch.PublishWithContext(ctx,
 		"order", // exchange
@@ -59,7 +64,5 @@ func Execute(idProduct int32, quantity int32, totalPrice float64, status string)
 			ContentType: "application/json",
 			Body:        body,
 		})
-	failOnError(err, "Failed to publish a message")
-
-	log.Printf(" [x] Sent %s", body)
+	return err
 }

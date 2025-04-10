@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"api/src/order/domain/repositories"
-	"api/src/order/infraestructure/adapters"
 )
 
 type IOrder interface {
@@ -10,19 +9,21 @@ type IOrder interface {
 }
 
 type CreateOrder struct {
-	db repositories.IOrder
+	db             repositories.IOrder
+	rabbitProducer repositories.IRabbitProducer
 }
 
-func NewCreateOrder(db repositories.IOrder) *CreateOrder {
-	return &CreateOrder{db: db}
+func NewCreateOrder(db repositories.IOrder, rabbitProducer repositories.IRabbitProducer) *CreateOrder {
+	return &CreateOrder{db: db, rabbitProducer: rabbitProducer}
 }
 
 func (co *CreateOrder) Execute(idProduct int32, quantity int32, totalPrice float64, status string) error {
-	adapters.Execute(
-		idProduct,
-		quantity,
-		totalPrice,
-		status,
-	)
+	// Publicar en RabbitMQ
+	err := co.rabbitProducer.Publish(idProduct, quantity, totalPrice, status)
+	if err != nil {
+		return err
+	}
+
+	// Guardar en la base de datos
 	return co.db.Save(idProduct, quantity, totalPrice, status)
 }
